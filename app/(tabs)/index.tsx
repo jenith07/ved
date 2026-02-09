@@ -1,98 +1,191 @@
-import { Image } from 'expo-image';
-import { Platform, StyleSheet } from 'react-native';
+import { useRouter } from 'expo-router';
+import {
+  AlertTriangle,
+  Calculator,
+  ChevronRight,
+  Users
+} from 'lucide-react-native';
+import React from 'react';
+import {
+  ScrollView,
+  StyleSheet,
+  Text,
+  View,
+} from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 
-import { HelloWave } from '@/components/hello-wave';
-import ParallaxScrollView from '@/components/parallax-scroll-view';
-import { ThemedText } from '@/components/themed-text';
-import { ThemedView } from '@/components/themed-view';
-import { Link } from 'expo-router';
+import { Spacing, Typography, VetColors } from '@/constants/theme';
+import { Badge, StatusBadge } from '@/src/components/ui/Badge';
+import { ActionCard, Card } from '@/src/components/ui/Card';
+import { useAppStore } from '@/src/store/useAppStore';
 
 export default function HomeScreen() {
-  return (
-    <ParallaxScrollView
-      headerBackgroundColor={{ light: '#A1CEDC', dark: '#1D3D47' }}
-      headerImage={
-        <Image
-          source={require('@/assets/images/partial-react-logo.png')}
-          style={styles.reactLogo}
-        />
-      }>
-      <ThemedView style={styles.titleContainer}>
-        <ThemedText type="title">Welcome!</ThemedText>
-        <HelloWave />
-      </ThemedView>
-      <ThemedView style={styles.stepContainer}>
-        <ThemedText type="subtitle">Step 1: Try it</ThemedText>
-        <ThemedText>
-          Edit <ThemedText type="defaultSemiBold">app/(tabs)/index.tsx</ThemedText> to see changes.
-          Press{' '}
-          <ThemedText type="defaultSemiBold">
-            {Platform.select({
-              ios: 'cmd + d',
-              android: 'cmd + m',
-              web: 'F12',
-            })}
-          </ThemedText>{' '}
-          to open developer tools.
-        </ThemedText>
-      </ThemedView>
-      <ThemedView style={styles.stepContainer}>
-        <Link href="/modal">
-          <Link.Trigger>
-            <ThemedText type="subtitle">Step 2: Explore</ThemedText>
-          </Link.Trigger>
-          <Link.Preview />
-          <Link.Menu>
-            <Link.MenuAction title="Action" icon="cube" onPress={() => alert('Action pressed')} />
-            <Link.MenuAction
-              title="Share"
-              icon="square.and.arrow.up"
-              onPress={() => alert('Share pressed')}
-            />
-            <Link.Menu title="More" icon="ellipsis">
-              <Link.MenuAction
-                title="Delete"
-                icon="trash"
-                destructive
-                onPress={() => alert('Delete pressed')}
-              />
-            </Link.Menu>
-          </Link.Menu>
-        </Link>
+  const router = useRouter();
+  const { isOnline, pendingSyncCount, recentPatientIds } = useAppStore();
 
-        <ThemedText>
-          {`Tap the Explore tab to learn more about what's included in this starter app.`}
-        </ThemedText>
-      </ThemedView>
-      <ThemedView style={styles.stepContainer}>
-        <ThemedText type="subtitle">Step 3: Get a fresh start</ThemedText>
-        <ThemedText>
-          {`When you're ready, run `}
-          <ThemedText type="defaultSemiBold">npm run reset-project</ThemedText> to get a fresh{' '}
-          <ThemedText type="defaultSemiBold">app</ThemedText> directory. This will move the current{' '}
-          <ThemedText type="defaultSemiBold">app</ThemedText> to{' '}
-          <ThemedText type="defaultSemiBold">app-example</ThemedText>.
-        </ThemedText>
-      </ThemedView>
-    </ParallaxScrollView>
+  return (
+    <SafeAreaView style={styles.container} edges={['top']}>
+      <ScrollView
+        style={styles.scrollView}
+        contentContainerStyle={styles.scrollContent}
+        showsVerticalScrollIndicator={false}
+      >
+        {/* Header */}
+        <View style={styles.header}>
+          <View style={styles.headerLeft}>
+            <Text style={styles.greeting}>Good Morning! 👋</Text>
+            <Text style={styles.title}>VetDose Pro</Text>
+          </View>
+          <View style={styles.headerRight}>
+            <StatusBadge status={isOnline ? 'online' : 'offline'} />
+            {pendingSyncCount > 0 && (
+              <Badge variant="warning" size="sm" style={styles.syncBadge}>
+                {pendingSyncCount} pending
+              </Badge>
+            )}
+          </View>
+        </View>
+
+        {/* Quick Actions */}
+        <Text style={styles.sectionTitle}>Quick Actions</Text>
+        <View style={styles.actionsGrid}>
+          <ActionCard
+            icon={<Calculator size={32} color={VetColors.textInverse} />}
+            title="New Calculation"
+            subtitle="Drug dosing"
+            gradientColors={[VetColors.gradientPurpleStart, VetColors.gradientPurpleEnd]}
+            onPress={() => router.push('/(tabs)/calculator')}
+          />
+          <ActionCard
+            icon={<Users size={32} color={VetColors.textInverse} />}
+            title="Add Patient"
+            subtitle="New record"
+            gradientColors={[VetColors.gradientBlueStart, VetColors.gradientBlueEnd]}
+            onPress={() => router.push('/(tabs)/patients')}
+          />
+        </View>
+
+        {/* Emergency Access */}
+        <Card
+          variant="elevated"
+          backgroundColor={VetColors.cardRed}
+          pressable
+          onPress={() => router.push('/emergency/toxicity')}
+          style={styles.emergencyCard}
+        >
+          <View style={styles.emergencyContent}>
+            <View style={styles.emergencyIcon}>
+              <AlertTriangle size={28} color={VetColors.emergency} />
+            </View>
+            <View style={styles.emergencyText}>
+              <Text style={styles.emergencyTitle}>Emergency Protocols</Text>
+              <Text style={styles.emergencySubtitle}>
+                Toxicity calculator & antidote reference
+              </Text>
+            </View>
+            <ChevronRight size={24} color={VetColors.emergency} />
+          </View>
+        </Card>
+
+        {/* Recent Patients */}
+        {recentPatientIds.length > 0 && (
+          <>
+            <Text style={styles.sectionTitle}>Recent Patients</Text>
+            <Card variant="default" style={styles.recentCard}>
+              <Text style={styles.emptyText}>
+                Recent patients will appear here
+              </Text>
+            </Card>
+          </>
+        )}
+      </ScrollView>
+    </SafeAreaView>
   );
 }
 
 const styles = StyleSheet.create({
-  titleContainer: {
+  container: {
+    flex: 1,
+    backgroundColor: VetColors.backgroundSecondary,
+  },
+  scrollView: {
+    flex: 1,
+  },
+  scrollContent: {
+    padding: Spacing.base,
+    paddingBottom: 120,
+  },
+  header: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'flex-start',
+    marginBottom: Spacing.lg,
+  },
+  headerLeft: {
+    flex: 1,
+  },
+  headerRight: {
+    alignItems: 'flex-end',
+  },
+  greeting: {
+    fontSize: Typography.sizes.base,
+    color: VetColors.textSecondary,
+    marginBottom: Spacing.xs,
+  },
+  title: {
+    fontSize: Typography.sizes['3xl'],
+    fontWeight: Typography.weights.bold,
+    color: VetColors.text,
+  },
+  syncBadge: {
+    marginTop: Spacing.xs,
+  },
+  sectionTitle: {
+    fontSize: Typography.sizes.lg,
+    fontWeight: Typography.weights.semibold,
+    color: VetColors.text,
+    marginBottom: Spacing.md,
+  },
+  actionsGrid: {
+    flexDirection: 'row',
+    gap: Spacing.md,
+    marginBottom: Spacing.lg,
+  },
+  emergencyCard: {
+    marginBottom: Spacing.lg,
+  },
+  emergencyContent: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 8,
   },
-  stepContainer: {
-    gap: 8,
-    marginBottom: 8,
+  emergencyIcon: {
+    width: 48,
+    height: 48,
+    borderRadius: 24,
+    backgroundColor: 'rgba(229, 57, 53, 0.15)',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginRight: Spacing.md,
   },
-  reactLogo: {
-    height: 178,
-    width: 290,
-    bottom: 0,
-    left: 0,
-    position: 'absolute',
+  emergencyText: {
+    flex: 1,
+  },
+  emergencyTitle: {
+    fontSize: Typography.sizes.md,
+    fontWeight: Typography.weights.semibold,
+    color: VetColors.emergency,
+  },
+  emergencySubtitle: {
+    fontSize: Typography.sizes.sm,
+    color: VetColors.textSecondary,
+    marginTop: 2,
+  },
+  recentCard: {
+    padding: Spacing.xl,
+    alignItems: 'center',
+  },
+  emptyText: {
+    fontSize: Typography.sizes.base,
+    color: VetColors.textMuted,
   },
 });
